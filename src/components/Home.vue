@@ -1,25 +1,75 @@
 <template>
  <el-container class="home">
   <el-header>
-    <div class="logo">1</div>
-  
+    <div class="logo"></div>
     <div class="logout">
       欢迎光临
-      <a href="Javascript:">退出</a>
+      <a href="Javascript:" @click="logout">退出</a>
     </div>
       <h1 class="title">
         电商后台管理系统
       </h1>
   </el-header>
   <el-container>
-    <el-aside width="200px">Aside</el-aside>
-    <el-main>Main</el-main>
+    <el-aside width="200px">
+          <el-menu
+          default-active="1-1"
+          class="el-menu-vertical-demo"
+          background-color="#545c64"
+          text-color="#fff"
+          active-text-color="#ffd04b"
+          unique-opened
+          router>
+          <el-submenu index="1">
+            <template slot="title">
+              <i class="el-icon-location"></i>
+              <span>用户管理</span>
+            </template>
+             <el-menu-item index="/users"> <i class="el-icon-menu"></i>用户列表</el-menu-item>
+          </el-submenu>
+              <el-submenu index="2">
+            <template slot="title">
+              <i class="el-icon-location"></i>
+              <span>权限管理</span>
+            </template>
+              <el-menu-item index="2-1">角色列表</el-menu-item>
+              <el-menu-item index="2-2">权限列表</el-menu-item>
+          </el-submenu>
+          </el-menu>
+        </el-aside>
+      <el-main>
+        <router-view/>
+      </el-main>
+    </el-container>
   </el-container>
-</el-container>
 </template>
 
 <script>
-export default {}
+export default {
+  methods: {
+    logout() {
+      this.$confirm('此操作将退出登陆, 是否继续?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          localStorage.removeItem('token')
+          this.$router.push('/login')
+          this.$message({
+            type: 'success',
+            message: '退出成功!'
+          })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消退出'
+          })
+        })
+    }
+  }
+}
 </script>
 
 <style lang="less" scoped>
