@@ -6,10 +6,10 @@
       <el-breadcrumb-item>用户列表</el-breadcrumb-item>
     </el-breadcrumb>
     <div style="margin-bottom: 10px;">
-  <el-input placeholder="请输入内容" v-model="query" >
+  <el-input placeholder="请输入内容" v-model="query" @keyup.enter.native="keyWords">
     <el-button slot="append" icon="el-icon-search" @click="keyWords"></el-button>
   </el-input>
-   <el-button type="success" plain>添加用户</el-button>
+   <el-button type="success" plain @click="showAddDialog">添加用户</el-button>
 </div>
     <el-table :data="userList">
     <el-table-column property="username" label="姓名" width="150"></el-table-column>
@@ -20,7 +20,7 @@
           <el-switch
             v-model="scope.row.mg_state"
             active-color="#13ce66"
-            inactive-color="#ff4949">
+            inactive-color="#ff4949" @change="changeStatus(scope.row)">
           </el-switch>
       </template>
     </el-table-column>
@@ -45,11 +45,57 @@
       :total="total"
       background>
     </el-pagination>
+<!--对话框,添加用户 -->
+ <el-dialog
+    title="添加用户"
+    :visible.sync="addDialogVisible"
+    width="40%"
+    >
+    <el-form ref="form" :model="addForm" :rules="rules" label-width="80px" status-icon>
+      <el-form-item label="用户名" prop="username">
+        <el-input v-model="addForm.username"></el-input>
+      </el-form-item>
+       <el-form-item label="密码" prop="password">
+        <el-input v-model="addForm.password"></el-input>
+      </el-form-item>
+       <el-form-item label="邮箱" prop="email">
+        <el-input v-model="addForm.email"></el-input>
+      </el-form-item>
+       <el-form-item label="电话" prop="mobile">
+        <el-input v-model="addForm.mobile"></el-input>
+      </el-form-item>
+    </el-form>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="addDialogVisible = false">取 消</el-button>
+      <el-button type="primary" @click="addUser">确 定</el-button>
+    </span>
+  </el-dialog>
+  <!-- 编辑对话框 -->
+   <el-dialog
+    title="编辑用户"
+    :visible.sync="editDialogVisible"
+    width="40%"
+    >
+    <el-form ref="editForm" :model="editForm" :rules="rules" label-width="80px" status-icon>
+      <el-form-item label="用户名" >
+        <el-tag type="info">{{editForm.username}}</el-tag>
+      </el-form-item>
+       <el-form-item label="邮箱" prop="email">
+        <el-input v-model="editForm.email"></el-input>
+      </el-form-item>
+       <el-form-item label="电话" prop="mobile">
+        <el-input v-model="editForm.mobile"></el-input>
+      </el-form-item>
+    </el-form>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="editDialogVisible = false">取 消</el-button>
+      <el-button type="primary" @click="editUser">确 定</el-button>
+    </span>
+  </el-dialog>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
 export default {
   data() {
     return {
@@ -57,45 +103,85 @@ export default {
       currentPage: 1,
       pageSize: 2,
       total: 0,
-      userList: []
+      userList: [],
+      addDialogVisible: false,
+      editDialogVisible: false,
+      addForm: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
+      },
+      editForm: {
+        id: '',
+        username: '',
+        email: '',
+        mobile: ''
+      },
+      rules: {
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 3, max: 6, message: '长度在 3 到 6个字符', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 6, max: 12, message: '长度在 6 到 12 个字符', trigger: 'blur' }
+        ],
+        email: [{ type: 'email', message: '请输入正确格式的邮箱地址' }],
+        mobile: [{ pattern: /^1\d{10}$/, message: ' 请输入正确的手机号码' }]
+      }
     }
   },
   methods: {
+    // 获取用户列表数据
     getUsersList() {
-      axios({
+      this.axios({
         method: 'get',
-        url: 'http://localhost:8888/api/private/v1/users',
+        url: 'users',
         params: {
           query: this.query,
           pagenum: this.currentPage,
           pagesize: this.pageSize
-        },
-        headers: {
-          Authorization: localStorage.getItem('token')
         }
       }).then((res) => {
-        this.total = res.data.data.total
-        this.currentPage = res.data.data.pagenum
-        this.userList = res.data.data.users
+        // console.log(22, res.data.total)
+        this.total = res.data.total
+        this.currentPage = res.data.pagenum
+        this.userList = res.data.users
       })
     },
     // 关键字搜素
     keyWords() {
       this.getUsersList()
     },
+    changeStatus({ id, mg_state: myState }) {
+      // console.log(id, myState)
+      this.axios({
+        url: `users/${id}/state/${myState}`,
+        method: 'put'
+      }).then(({ meta: { status } }) => {
+        if (status === 200) {
+          this.$message.success('状态修改成功')
+        } else {
+          this.$message.error('状态修改失败')
+        }
+      })
+    },
+    // 编辑用户信息,数据回写---不用ajax,用的是作用域插槽
     handleEdit(index, row) {
-      console.log(row)
+      this.editDialogVisible = true
+      this.editForm.username = row.username
+      // this.editForm.password = row.password
+      this.editForm.email = row.email
+      this.editForm.mobile = row.mobile
+      this.editForm.id = row.id
+      // console.log(row)
     },
     // 删除一条用户
     handleDelete(id) {
-      console.log(`http://localhost:8888/api/private/v1/users/${id}`)
-
-      axios({
-        url: `http://localhost:8888/api/private/v1/users/${id}`,
-        method: 'delete',
-        headers: {
-          Authorization: localStorage.getItem('token')
-        }
+      this.axios({
+        url: `users/${id}`,
+        method: 'delete'
       }).then((res) => {
         if (this.userList.length === 1 && this.currentPage > 1) {
           this.currentPage--
@@ -114,8 +200,57 @@ export default {
     handleCurrentChange(val) {
       this.currentPage = val
       this.getUsersList()
+    },
+    showAddDialog() {
+      this.addDialogVisible = true
+    },
+    // 添加用户
+    addUser() {
+      this.$refs.form.validate((valid) => {
+        // console.log(11, this.$refs)
+        if (valid) {
+          this.axios({
+            method: 'post',
+            url: 'users',
+            data: this.addForm
+          }).then(({ meta: { status }, data }) => {
+            if (status === 201) {
+              this.$message.success('添加成功')
+              this.$refs.form.resetFields()
+              this.addDialogVisible = false
+              // 页面刷新在最后一页
+              this.total++
+              this.currentPage = Math.ceil(this.total / this.pageSize)
+              this.getUsersList()
+            }
+          })
+        } else {
+          this.$message('添加用户失败')
+          return false
+        }
+      })
+    },
+    editUser(id) {
+      console.log(1, id)
+      this.axios({
+        method: 'put',
+        url: `users/${this.editForm.id}`,
+        data: this.editForm
+        // data: {
+        //   email: this.editForm.email,
+        //   mobile: this.editForm.mobile
+        // }
+      }).then(({ meta: { status } }) => {
+        if (status === 200) {
+          this.$message.success('修改成功')
+          this.$refs.editForm.resetFields()
+          this.editDialogVisible = false
+          this.getUsersList()
+        }
+      })
     }
   },
+  // 钩子函数 生成用户列表
   created() {
     this.getUsersList()
   }

@@ -6,7 +6,7 @@
     <el-input v-model="form.username"></el-input>
   </el-form-item>
  <el-form-item label="密码" prop="password">
-    <el-input v-model="form.password" type="password"></el-input>
+    <el-input v-model="form.password" type="password" @keyup.enter.native="submitForm('form')"></el-input>
   </el-form-item>
   <el-form-item>
     <el-button type="primary"  @click="submitForm('form')">登陆</el-button>
@@ -52,16 +52,16 @@ export default {
             method: 'post',
             data: this.form
           }).then((res) => {
-            console.log(res.data.data.token)
-            if (res.data.meta.status === 200) {
-              localStorage.setItem('token', res.data.data.token)
+            // console.log(res.data.token)
+            if (res.meta.status === 200) {
+              localStorage.setItem('token', res.data.token)
               this.$message({
                 message: '登陆成功',
                 type: 'success'
               })
               this.$router.push('/home')
             } else {
-              this.$message.error(res.data.meta.msg)
+              this.$message.error(res.meta.msg)
             }
           })
         } else {
