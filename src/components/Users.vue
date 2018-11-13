@@ -134,8 +134,8 @@ export default {
   },
   methods: {
     // 获取用户列表数据
-    getUsersList() {
-      this.axios({
+    async getUsersList() {
+      let res = await this.axios({
         method: 'get',
         url: 'users',
         params: {
@@ -143,29 +143,29 @@ export default {
           pagenum: this.currentPage,
           pagesize: this.pageSize
         }
-      }).then((res) => {
-        // console.log(22, res.data.total)
-        this.total = res.data.total
-        this.currentPage = res.data.pagenum
-        this.userList = res.data.users
       })
+      // console.log(22, res.data.total)
+      this.total = res.data.total
+      this.currentPage = res.data.pagenum
+      this.userList = res.data.users
     },
     // 关键字搜素
     keyWords() {
       this.getUsersList()
     },
-    changeStatus({ id, mg_state: myState }) {
+    async changeStatus({ id, mg_state: myState }) {
       // console.log(id, myState)
-      this.axios({
+      let res = await this.axios({
         url: `users/${id}/state/${myState}`,
         method: 'put'
-      }).then(({ meta: { status } }) => {
-        if (status === 200) {
-          this.$message.success('状态修改成功')
-        } else {
-          this.$message.error('状态修改失败')
-        }
       })
+      let { meta: { status } } = res
+
+      if (status === 200) {
+        this.$message.success('状态修改成功')
+      } else {
+        this.$message.error('状态修改失败')
+      }
     },
     // 编辑用户信息,数据回写---不用ajax,用的是作用域插槽
     handleEdit(index, row) {
