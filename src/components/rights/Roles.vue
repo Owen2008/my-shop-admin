@@ -118,10 +118,10 @@ export default {
       rules: {
         roleName: [
           { required: true, message: '请输入角色名称', trigger: 'blur' }
-        ],
-        roleDesc: [
-          { required: true, message: '请输入角色描述', trigger: 'blur' }
         ]
+        // roleDesc: [
+        //   { required: true, message: '请输入角色描述', trigger: 'blur' }
+        // ]
       }
     }
   },
@@ -155,21 +155,25 @@ export default {
     showAddRoles() {
       this.AddRolesDialogVisible = true
     },
-    // 角色编辑按钮,显示对话框,数据回写
+    // 角色编辑按钮,显示对话框,数据回写-----不用axios 请求数据的,scope.row就能拿到数据
     async handleEdit(row) {
       this.editRolesDialogVisible = true
+      this.editform.roleId = row.id
+      this.editform.roleName = row.roleName
+      this.editform.roleDesc = row.roleDesc
       // console.log(row)
-      let res = await this.axios.get(`roles/${row.id}`)
+      // let res = await this.axios.get(`roles/${row.id}`)
       // console.log(res)
-      let { meta: { status }, data } = res
-      if (status === 200) {
-        this.editform.roleId = data.roleId
-        this.editform.roleName = data.roleName
-        this.editform.roleDesc = data.roleDesc
-      }
+      // let { meta: { status }, data } = res
+      // if (status === 200) {
+      //   this.editform.roleId = data.roleId
+      //   this.editform.roleName = data.roleName
+      //   this.editform.roleDesc = data.roleDesc
+      // }
     },
     //  角色编辑完成,提交
     async editRoles() {
+      // console.log(this.editform)
       let res = await this.axios.put(
         `roles/${this.editform.roleId}`,
         this.editform
@@ -240,6 +244,7 @@ export default {
         this.$message.success('编辑权限完成')
       }
     },
+    // 添加角色
     AddRoles() {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
@@ -249,6 +254,8 @@ export default {
           let { meta: { status } } = res
           if (status === 201) {
             this.$message.success('添加角色成功')
+            this.$refs.form.resetFields()
+
             this.AddRolesDialogVisible = false
             this.getRolesList()
           }

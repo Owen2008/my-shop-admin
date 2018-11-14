@@ -30,8 +30,8 @@
           @click="handleEdit(scope.$index, scope.row)" plain></el-button>
         <el-button type="danger" icon="el-icon-delete" size="mini" plain
          @click="handleDelete(scope.row.id)"></el-button>
-          <el-button type="success" icon="el-icon-check" plain
-            @click="handleAssign()">分配角色</el-button>
+          <el-button type="success" icon="el-icon-check" plain size="mini"
+            @click="handleAssign(scope.row)">分配角色</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -92,6 +92,36 @@
       <el-button type="primary" @click="editUser">确 定</el-button>
     </span>
   </el-dialog>
+
+  <!-- 分配角色对话框 -->
+   <el-dialog
+    title="分配角色"
+    :visible.sync="assignDialogVisible"
+    width="40%"
+    >
+    <el-form ref="assignForm" :model="assignForm" :rules="rules" label-width="80px" status-icon>
+      <el-form-item label="用户名" >
+        <el-tag type="info">{{assignForm.username}}</el-tag>
+      </el-form-item>
+       <el-form-item label="角色列表" :prop="value">
+       <template>
+        <el-select v-model="assignForm.value" placeholder="请选择"  @change="changeRole">
+          <el-option
+            v-for="item in rolesList"
+            :key="item.id"
+            :label="item.roleName"
+            :value="item.id"
+            >
+          </el-option>
+        </el-select>
+      </template>
+      </el-form-item>
+    </el-form>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="assignDialogVisible = false">取 消</el-button>
+      <el-button type="primary" @click="assignRole">确 定</el-button>
+    </span>
+  </el-dialog>
   </div>
 </template>
 
@@ -99,6 +129,17 @@
 export default {
   data() {
     return {
+      // 分配角色数据
+      assignDialogVisible: false,
+      assignForm: {
+        id: '',
+        rid: '',
+        username: '',
+        value: ''
+      },
+      rolesList: {},
+      value: '',
+
       query: '',
       currentPage: 1,
       pageSize: 2,
@@ -128,7 +169,8 @@ export default {
           { min: 6, max: 12, message: '长度在 6 到 12 个字符', trigger: 'blur' }
         ],
         email: [{ type: 'email', message: '请输入正确格式的邮箱地址' }],
-        mobile: [{ pattern: /^1\d{10}$/, message: ' 请输入正确的手机号码' }]
+        mobile: [{ pattern: /^1\d{10}$/, message: ' 请输入正确的手机号码' }],
+        value: [{ required: true, message: '请选择角色', tigger: 'blur' }]
       }
     }
   },
@@ -148,6 +190,16 @@ export default {
       this.total = res.data.total
       this.currentPage = res.data.pagenum
       this.userList = res.data.users
+    },
+    // 获取角色列表
+    async getRolesList() {
+      let res = await this.axios.get(`roles`)
+      // console.log(res)
+      let { meta: { status }, data } = res
+      if (status === 200) {
+        this.rolesList = data
+        // console.log(this.rolesList)
+      }
     },
     // 关键字搜素
     keyWords() {
@@ -248,11 +300,50 @@ export default {
           this.getUsersList()
         }
       })
+    },
+    async handleAssign(row) {
+      this.assignDialogVisible = true
+      // console.log(row)
+      let { id, username } = row
+      this.assignForm.username = username
+      this.assignForm.id = id
+      // 根据id查询用户信息,进行角色列表渲染--回写默认的角色
+      let res = await this.axios.get(`users/${id}`)
+      // console.log(22, res)
+      let { meta: { status }, data: { rid } } = res
+      if (status === 200) {
+        if (rid === -1) {
+          rid = ''
+        }
+        this.assignForm.value = rid
+      }
+    },
+    changeRole(value) {
+      this.assignForm.rid = value
+    },
+
+    // 角色分配完成,提交
+    assignRole() {
+      this.$refs.assignForm.validate(async (valid) => {
+        if (!valid) return false
+        // console.log(this.assignForm.id, this.assignForm.rid)
+
+        let res = await this.axios.put(`users/${this.assignForm.id}/role`, {
+          rid: this.assignForm.rid
+        })
+        // console.log(res)
+        if (res.meta.status === 200) {
+          this.$message.success('设置角色成功')
+          this.assignDialogVisible = false
+          this.getUsersList()
+        }
+      })
     }
   },
   // 钩子函数 生成用户列表
   created() {
     this.getUsersList()
+    this.getRolesList()
   }
 }
 </script>
