@@ -51,13 +51,15 @@ export default {
           pagesize: this.pageSize
         }
       })
-      console.log(res)
+      // console.log(res)
       let { meta: { status }, data: { goods, total, pagenum } } = res
+      console.log(res)
       if (status === 200) {
         this.goodsList = goods
-        this.currentPage = -pagenum // 字符串转数字
+        this.currentPage = parseInt(pagenum) // 字符串转数字
         this.total = total
       }
+      console.log(233, this.currentPage)
     },
     handleSizeChange(value) {
       this.pageSize = value
@@ -70,7 +72,7 @@ export default {
   },
   created() {
     this.getGoodsList()
-    console.log(333, this.currentPage, this.pageSize)
+    // console.log(333, this.currentPage, this.pageSize)
   }
 }
 </script>

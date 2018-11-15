@@ -7,8 +7,12 @@ import router from './router'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import './assets/common.css'
-// 优化axios
 import axios from 'axios'
+// 引入树形表格菜单,并注册成公用组件
+import ElTreeGrid from 'element-tree-grid'
+// console.log(ElTreeGrid.name) //el-table-tree-column
+Vue.component(ElTreeGrid.name, ElTreeGrid)
+// 优化axios
 Vue.prototype.axios = axios
 axios.defaults.baseURL = 'http://localhost:8888/api/private/v1/'
 // 添加请求拦截器
