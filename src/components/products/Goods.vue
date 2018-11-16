@@ -1,15 +1,18 @@
 <template>
   <div class="goods">
-    <el-button type="success" plain>添加商品</el-button>
+    <el-button type="success" plain @click="$router.push('/goods-add')">添加商品</el-button>
 <el-table :data="goodsList" style="width:100%">
-  <el-table-column type="index"></el-table-column>
+  <el-table-column type="index" :index="indexMethod"></el-table-column>
   <el-table-column prop="goods_name" label="商品名称" >
   </el-table-column>
     <el-table-column prop="goods_price" label="商品价格" >
   </el-table-column>
     <el-table-column prop="goods_weight" label="商品重量" >
   </el-table-column>
-     <el-table-column prop="add_time" label="创建时间" >
+     <el-table-column  label="创建时间" >
+       <template slot-scope="scope">
+         {{scope.row.add_time |dateFilter}}
+       </template>
   </el-table-column>
    <el-table-column label="操作">
        <template slot-scope="scope">
@@ -53,7 +56,7 @@ export default {
       })
       // console.log(res)
       let { meta: { status }, data: { goods, total, pagenum } } = res
-      console.log(res)
+      // console.log(res)
       if (status === 200) {
         this.goodsList = goods
         this.currentPage = parseInt(pagenum) // 字符串转数字
@@ -68,6 +71,9 @@ export default {
     handleCurrentChange(value) {
       this.currentPage = value
       this.getGoodsList()
+    },
+    indexMethod(index) {
+      return index + (this.currentPage - 1) * this.pageSize + 1
     }
   },
   created() {

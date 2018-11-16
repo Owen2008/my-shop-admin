@@ -119,6 +119,9 @@ export default {
   }
   .el-aside {
     background-color: #545c64;
+    .el-submenu {
+      width: 200px;
+    }
   }
   .el-main {
     background-color: #d4dfe4;
